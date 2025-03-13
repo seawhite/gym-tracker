@@ -1,0 +1,129 @@
+{% extends 'base.html' %}
+
+{% block title %}View Workout - {{ workout.date.strftime('%Y-%m-%d') }}{% endblock %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col-md-8">
+        <h2>Workout Details</h2>
+        <h5>Date: {{ workout.date.strftime('%Y-%m-%d') }}</h5>
+    </div>
+    <div class="col-md-4 text-end">
+        <a href="{{ url_for('main.edit_workout', workout_id=workout.id) }}" class="btn btn-warning">Edit Workout</a>
+        <a href="{{ url_for('main.user_profile', user_id=workout.user_id) }}" class="btn btn-secondary">Back to Profile</a>
+    </div>
+</div>
+
+<div class="card mb-4">
+    <div class="card-header bg-primary text-white">
+        <h4 class="mb-0">Gym Session Info</h4>
+    </div>
+    <div class="card-body">
+        <div class="row">
+            <div class="col-md-6">
+                <strong>Start Time:</strong> 
+                {% if workout.start_time %}
+                    {{ workout.start_time.strftime('%H:%M:%S') }}
+                {% else %}
+                    Not recorded
+                {% endif %}
+            </div>
+            <div class="col-md-6">
+                <strong>End Time:</strong> 
+                {% if workout.end_time %}
+                    {{ workout.end_time.strftime('%H:%M:%S') }}
+                {% else %}
+                    Not recorded
+                {% endif %}
+            </div>
+        </div>
+        <div class="row mt-2">
+            <div class="col-md-6">
+                <strong>Total Duration:</strong> 
+                {% if workout.start_time and workout.end_time %}
+                    {{ ((workout.end_time - workout.start_time).total_seconds() / 60)|round|int }} minutes
+                {% else %}
+                    N/A
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Weight Lifting Section -->
+{% if workout.weight_exercises %}
+<div class="card mb-4">
+    <div class="card-header bg-primary text-white">
+        <h4 class="mb-0">Weight Lifting</h4>
+    </div>
+    <div class="card-body">
+        {% for exercise in workout.weight_exercises %}
+        <div class="card mb-2">
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-4">
+                        <strong>Machine:</strong> {{ exercise.machine.name }}
+                    </div>
+                    <div class="col-md-4">
+                        <strong>Sets/Reps/Weight:</strong> {{ exercise.sets_reps_weight }}
+                    </div>
+                    <div class="col-md-2">
+                        <strong>Seat Height:</strong> {{ exercise.seat_height or 'N/A' }}
+                    </div>
+                    <div class="col-md-2">
+                        <strong>Other:</strong> {{ exercise.other_parameters or 'N/A' }}
+                    </div>
+                    <div class="col-md-12 mt-2">
+                        <strong>Confidence:</strong> {{ exercise.confidence }}
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+{% endif %}
+
+<!-- Cardio Section -->
+{% if workout.cardio_exercises %}
+<div class="card mb-4">
+    <div class="card-header bg-primary text-white">
+        <h4 class="mb-0">Cardio</h4>
+    </div>
+    <div class="card-body">
+        {% for exercise in workout.cardio_exercises %}
+        <div class="card mb-2">
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-3">
+                        <strong>Type:</strong> {{ exercise.cardio_type.name }}
+                    </div>
+                    <div class="col-md-2">
+                        <strong>Duration:</strong> {{ exercise.duration or 'N/A' }}
+                    </div>
+                    <div class="col-md-2">
+                        <strong>Distance:</strong> {{ exercise.distance or 'N/A' }} miles
+                    </div>
+                    <div class="col-md-2">
+                        <strong>Calories:</strong> {{ exercise.calories or 'N/A' }}
+                    </div>
+                    <div class="col-md-1">
+                        <strong>Incline:</strong> {{ exercise.incline or 'N/A' }}
+                    </div>
+                    <div class="col-md-2">
+                        <strong>Resistance:</strong> {{ exercise.resistance or 'N/A' }}
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+{% endif %}
+
+{% if not workout.weight_exercises and not workout.cardio_exercises %}
+<div class="alert alert-info">
+    No exercises recorded for this workout.
+</div>
+{% endif %}
+{% endblock %}

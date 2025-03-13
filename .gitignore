@@ -172,3 +172,17 @@ cython_debug/
 
 # PyPI configuration file
 .pypirc
+
+# Gym Tracker specific
+*.db
+app.db
+app/app.db
+*.sqlite
+*.sqlite3
+.DS_Store
+.vscode/
+.idea/
+
+# Local configuration
+config.py
+.env.local

@@ -1,0 +1,36 @@
+{% extends 'base.html' %}
+
+{% block title %}Gym Tracker - Home{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-8 offset-md-2">
+        <div class="card">
+            <div class="card-header bg-primary text-white">
+                <h2 class="mb-0">Welcome to Gym Tracker</h2>
+            </div>
+            <div class="card-body">
+                <h4>Select a User</h4>
+                <div class="list-group mb-4">
+                    {% for user in users %}
+                        <a href="{{ url_for('main.user_profile', user_id=user.id) }}" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center">
+                            {{ user.name }}
+                            <span class="badge bg-primary rounded-pill">{{ user.workouts|length }} workouts</span>
+                        </a>
+                    {% else %}
+                        <div class="list-group-item">No users yet. Add one below!</div>
+                    {% endfor %}
+                </div>
+
+                <h4>Add New User</h4>
+                <form action="{{ url_for('main.add_user') }}" method="post">
+                    <div class="input-group mb-3">
+                        <input type="text" name="name" class="form-control" placeholder="Enter name" required>
+                        <button class="btn btn-primary" type="submit">Add User</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

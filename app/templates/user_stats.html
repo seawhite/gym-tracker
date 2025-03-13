@@ -1,0 +1,205 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ user.name }}'s Stats{% endblock %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col-md-8">
+        <h2>{{ user.name }}'s Workout Statistics</h2>
+    </div>
+    <div class="col-md-4 text-end">
+        <a href="{{ url_for('main.user_profile', user_id=user.id) }}" class="btn btn-secondary">Back to Profile</a>
+    </div>
+</div>
+
+<div class="card mb-4">
+    <div class="card-header bg-primary text-white">
+        <h4 class="mb-0">Date Range</h4>
+    </div>
+    <div class="card-body">
+        <form id="dateRangeForm" method="get" class="row g-3">
+            <div class="col-md-6">
+                <label for="days" class="form-label">Time Period</label>
+                <select id="days" name="days" class="form-select" onchange="this.form.submit()">
+                    <option value="7" {% if days == 7 %}selected{% endif %}>Last 7 days</option>
+                    <option value="14" {% if days == 14 %}selected{% endif %}>Last 14 days</option>
+                    <option value="30" {% if days == 30 %}selected{% endif %}>Last 30 days</option>
+                    <option value="60" {% if days == 60 %}selected{% endif %}>Last 60 days</option>
+                    <option value="90" {% if days == 90 %}selected{% endif %}>Last 90 days</option>
+                    <option value="180" {% if days == 180 %}selected{% endif %}>Last 6 months</option>
+                    <option value="365" {% if days == 365 %}selected{% endif %}>Last year</option>
+                </select>
+            </div>
+        </form>
+    </div>
+</div>
+
+<div class="row">
+    <!-- Weight Lifting Stats -->
+    <div class="col-md-6">
+        <div class="card mb-4">
+            <div class="card-header bg-primary text-white">
+                <h4 class="mb-0">Weight Lifting Stats</h4>
+            </div>
+            <div class="card-body">
+                <form id="weightMachineForm" method="get" class="mb-3">
+                    <input type="hidden" name="days" value="{{ days }}">
+                    {% if selected_cardio_id %}
+                    <input type="hidden" name="cardio_id" value="{{ selected_cardio_id }}">
+                    {% endif %}
+                    
+                    <div class="mb-3">
+                        <label for="machine_id" class="form-label">Select Weight Machine</label>
+                        <select id="machine_id" name="machine_id" class="form-select" onchange="this.form.submit()">
+                            <option value="">-- Select a machine --</option>
+                            {% for machine in weight_machines %}
+                                <option value="{{ machine.id }}" {% if selected_machine_id|int == machine.id %}selected{% endif %}>
+                                    {{ machine.name }}
+                                </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                </form>
+                
+                {% if selected_machine_id %}
+                    {% if weight_graph %}
+                        <div class="mb-4 position-relative">
+                            <h5>Average Weight Over Time</h5>
+                            <button type="button" class="btn btn-sm btn-primary position-absolute top-0 end-0" 
+                                data-bs-toggle="modal" data-bs-target="#graphModal" 
+                                data-graph-title="Average Weight Over Time" 
+                                data-graph-src="data:image/png;base64,{{ weight_graph }}">
+                                <i class="bi bi-arrows-fullscreen"></i> Full Screen
+                            </button>
+                            <img src="data:image/png;base64,{{ weight_graph }}" class="img-fluid" alt="Average Weight Chart">
+                        </div>
+                    {% else %}
+                        <div class="alert alert-info">No weight data available for the selected time period.</div>
+                    {% endif %}
+                    
+                    {% if reps_graph %}
+                        <div class="mb-4 position-relative">
+                            <h5>Total Repetitions Over Time</h5>
+                            <button type="button" class="btn btn-sm btn-primary position-absolute top-0 end-0" 
+                                data-bs-toggle="modal" data-bs-target="#graphModal" 
+                                data-graph-title="Total Repetitions Over Time" 
+                                data-graph-src="data:image/png;base64,{{ reps_graph }}">
+                                <i class="bi bi-arrows-fullscreen"></i> Full Screen
+                            </button>
+                            <img src="data:image/png;base64,{{ reps_graph }}" class="img-fluid" alt="Total Repetitions Chart">
+                        </div>
+                    {% else %}
+                        <div class="alert alert-info">No repetition data available for the selected time period.</div>
+                    {% endif %}
+                {% else %}
+                    <div class="alert alert-info">Select a weight machine to view statistics.</div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    
+    <!-- Cardio Stats -->
+    <div class="col-md-6">
+        <div class="card mb-4">
+            <div class="card-header bg-primary text-white">
+                <h4 class="mb-0">Cardio Stats</h4>
+            </div>
+            <div class="card-body">
+                <form id="cardioTypeForm" method="get" class="mb-3">
+                    <input type="hidden" name="days" value="{{ days }}">
+                    {% if selected_machine_id %}
+                    <input type="hidden" name="machine_id" value="{{ selected_machine_id }}">
+                    {% endif %}
+                    
+                    <div class="mb-3">
+                        <label for="cardio_id" class="form-label">Select Cardio Type</label>
+                        <select id="cardio_id" name="cardio_id" class="form-select" onchange="this.form.submit()">
+                            <option value="">-- Select a cardio type --</option>
+                            {% for type in cardio_types %}
+                                <option value="{{ type.id }}" {% if selected_cardio_id|int == type.id %}selected{% endif %}>
+                                    {{ type.name }}
+                                </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                </form>
+                
+                {% if selected_cardio_id %}
+                    {% if cardio_duration_graph %}
+                        <div class="mb-4 position-relative">
+                            <h5>Cardio Duration Over Time</h5>
+                            <button type="button" class="btn btn-sm btn-primary position-absolute top-0 end-0" 
+                                data-bs-toggle="modal" data-bs-target="#graphModal" 
+                                data-graph-title="Cardio Duration Over Time" 
+                                data-graph-src="data:image/png;base64,{{ cardio_duration_graph }}">
+                                <i class="bi bi-arrows-fullscreen"></i> Full Screen
+                            </button>
+                            <img src="data:image/png;base64,{{ cardio_duration_graph }}" class="img-fluid" alt="Cardio Duration Chart">
+                        </div>
+                    {% else %}
+                        <div class="alert alert-info">No duration data available for the selected time period.</div>
+                    {% endif %}
+                    
+                    {% if cardio_distance_graph %}
+                        <div class="mb-4 position-relative">
+                            <h5>Cardio Distance Over Time</h5>
+                            <button type="button" class="btn btn-sm btn-primary position-absolute top-0 end-0" 
+                                data-bs-toggle="modal" data-bs-target="#graphModal" 
+                                data-graph-title="Cardio Distance Over Time" 
+                                data-graph-src="data:image/png;base64,{{ cardio_distance_graph }}">
+                                <i class="bi bi-arrows-fullscreen"></i> Full Screen
+                            </button>
+                            <img src="data:image/png;base64,{{ cardio_distance_graph }}" class="img-fluid" alt="Cardio Distance Chart">
+                        </div>
+                    {% else %}
+                        <div class="alert alert-info">No distance data available for the selected time period.</div>
+                    {% endif %}
+                {% else %}
+                    <div class="alert alert-info">Select a cardio type to view statistics.</div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Full Screen Graph Modal -->
+<div class="modal fade" id="graphModal" tabindex="-1" aria-labelledby="graphModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-fullscreen">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="graphModalLabel">Graph</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body text-center">
+                <img id="fullScreenGraph" src="" class="img-fluid" alt="Full Screen Graph">
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const graphModal = document.getElementById('graphModal');
+        if (graphModal) {
+            graphModal.addEventListener('show.bs.modal', function(event) {
+                // Button that triggered the modal
+                const button = event.relatedTarget;
+                
+                // Extract info from data-* attributes
+                const graphTitle = button.getAttribute('data-graph-title');
+                const graphSrc = button.getAttribute('data-graph-src');
+                
+                // Update the modal's content
+                const modalTitle = graphModal.querySelector('.modal-title');
+                const modalImage = document.getElementById('fullScreenGraph');
+                
+                modalTitle.textContent = graphTitle;
+                modalImage.src = graphSrc;
+            });
+        }
+    });
+</script>
+{% endblock %}

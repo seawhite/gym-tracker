@@ -1,0 +1,441 @@
+{% extends 'base.html' %}
+
+{% block title %}Edit Workout - {{ workout.date.strftime('%Y-%m-%d') }}{% endblock %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col-md-8">
+        <h2>Edit Workout</h2>
+        <h5>Date: {{ workout.date.strftime('%Y-%m-%d') }}</h5>
+    </div>
+    <div class="col-md-4 text-end">
+        <a href="{{ url_for('main.view_workout', workout_id=workout.id) }}" class="btn btn-secondary">Cancel</a>
+        <button id="saveChangesBtn" class="btn btn-success">Save Changes</button>
+    </div>
+</div>
+
+<div class="card mb-4">
+    <div class="card-header bg-primary text-white">
+        <h4 class="mb-0">Gym Session Timing</h4>
+    </div>
+    <div class="card-body">
+        <div class="row">
+            <div class="col-md-6">
+                <label for="startTime" class="form-label">Start Time</label>
+                <input type="datetime-local" class="form-control" id="startTime" 
+                       value="{{ workout.start_time.strftime('%Y-%m-%dT%H:%M') if workout.start_time else '' }}">
+            </div>
+            <div class="col-md-6">
+                <label for="endTime" class="form-label">End Time</label>
+                <input type="datetime-local" class="form-control" id="endTime"
+                       value="{{ workout.end_time.strftime('%Y-%m-%dT%H:%M') if workout.end_time else '' }}">
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Weight Lifting Section -->
+<div class="card mb-4">
+    <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
+        <h4 class="mb-0">Weight Lifting</h4>
+        <button type="button" class="btn btn-light" id="addWeightExerciseBtn">
+            Add Weight Exercise
+        </button>
+    </div>
+    <div class="card-body">
+        <div id="weightExercises">
+            {% for exercise in workout.weight_exercises %}
+            <div class="card mb-2 weight-exercise" data-id="{{ exercise.id }}">
+                <div class="card-body">
+                    <form class="weight-exercise-form row g-3">
+                        <div class="col-md-4">
+                            <label class="form-label">Machine</label>
+                            <select class="form-select machine-select" required>
+                                {% for machine in weight_machines %}
+                                    <option value="{{ machine.id }}" {% if machine.id == exercise.machine_id %}selected{% endif %}>
+                                        {{ machine.name }}
+                                    </option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label">Sets/Reps/Weight</label>
+                            <input type="text" class="form-control sets-reps-weight" value="{{ exercise.sets_reps_weight }}" required>
+                            <small class="form-text text-muted">Format: 1x12 at 50 lbs, 2x15 at 20 lbs</small>
+                        </div>
+                        <div class="col-md-2">
+                            <label class="form-label">Seat Height</label>
+                            <input type="text" class="form-control seat-height" value="{{ exercise.seat_height or '' }}">
+                        </div>
+                        <div class="col-md-2">
+                            <label class="form-label">Other Parameters</label>
+                            <input type="text" class="form-control other-params" value="{{ exercise.other_parameters or '' }}">
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label">Confidence</label>
+                            <select class="form-select confidence">
+                                <option value="low" {% if exercise.confidence == 'low' %}selected{% endif %}>Low</option>
+                                <option value="medium" {% if exercise.confidence == 'medium' %}selected{% endif %}>Medium</option>
+                                <option value="high" {% if exercise.confidence == 'high' %}selected{% endif %}>High</option>
+                            </select>
+                        </div>
+                        <div class="col-md-12 text-end">
+                            <button type="button" class="btn btn-danger btn-sm delete-weight-exercise">Delete</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+            {% else %}
+            <div class="alert alert-info">No weight exercises recorded. Add one using the button above.</div>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+
+<!-- Cardio Section -->
+<div class="card mb-4">
+    <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
+        <h4 class="mb-0">Cardio</h4>
+        <button type="button" class="btn btn-light" id="addCardioExerciseBtn">
+            Add Cardio Exercise
+        </button>
+    </div>
+    <div class="card-body">
+        <div id="cardioExercises">
+            {% for exercise in workout.cardio_exercises %}
+            <div class="card mb-2 cardio-exercise" data-id="{{ exercise.id }}">
+                <div class="card-body">
+                    <form class="cardio-exercise-form row g-3">
+                        <div class="col-md-4">
+                            <label class="form-label">Cardio Type</label>
+                            <select class="form-select cardio-type-select" required>
+                                {% for type in cardio_types %}
+                                    <option value="{{ type.id }}" {% if type.id == exercise.cardio_type_id %}selected{% endif %}>
+                                        {{ type.name }}
+                                    </option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="col-md-2">
+                            <label class="form-label">Duration (MM:SS)</label>
+                            <input type="text" class="form-control duration" value="{{ exercise.duration or '' }}">
+                        </div>
+                        <div class="col-md-2">
+                            <label class="form-label">Distance (miles)</label>
+                            <input type="number" step="0.01" class="form-control distance" value="{{ exercise.distance or '' }}">
+                        </div>
+                        <div class="col-md-2">
+                            <label class="form-label">Calories</label>
+                            <input type="number" class="form-control calories" value="{{ exercise.calories or '' }}">
+                        </div>
+                        <div class="col-md-1">
+                            <label class="form-label">Incline</label>
+                            <input type="number" step="0.1" class="form-control incline" value="{{ exercise.incline or '' }}">
+                        </div>
+                        <div class="col-md-1">
+                            <label class="form-label">Resistance</label>
+                            <input type="number" step="0.1" class="form-control resistance" value="{{ exercise.resistance or '' }}">
+                        </div>
+                        <div class="col-md-12 text-end">
+                            <button type="button" class="btn btn-danger btn-sm delete-cardio-exercise">Delete</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+            {% else %}
+            <div class="alert alert-info">No cardio exercises recorded. Add one using the button above.</div>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+
+<!-- Add Weight Exercise Template -->
+<template id="weightExerciseTemplate">
+    <div class="card mb-2 weight-exercise" data-id="new">
+        <div class="card-body">
+            <form class="weight-exercise-form row g-3">
+                <div class="col-md-4">
+                    <label class="form-label">Machine</label>
+                    <select class="form-select machine-select" required>
+                        <option value="">Select machine...</option>
+                        {% for machine in weight_machines %}
+                            <option value="{{ machine.id }}">{{ machine.name }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label">Sets/Reps/Weight</label>
+                    <input type="text" class="form-control sets-reps-weight" placeholder="e.g. 3x15 at 50 lbs" required>
+                    <small class="form-text text-muted">Format: 1x12 at 50 lbs, 2x15 at 20 lbs</small>
+                </div>
+                <div class="col-md-2">
+                    <label class="form-label">Seat Height</label>
+                    <input type="text" class="form-control seat-height" placeholder="e.g. 4">
+                </div>
+                <div class="col-md-2">
+                    <label class="form-label">Other Parameters</label>
+                    <input type="text" class="form-control other-params" placeholder="e.g. 8">
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label">Confidence</label>
+                    <select class="form-select confidence">
+                        <option value="low">Low</option>
+                        <option value="medium" selected>Medium</option>
+                        <option value="high">High</option>
+                    </select>
+                </div>
+                <div class="col-md-12 text-end">
+                    <button type="button" class="btn btn-danger btn-sm delete-weight-exercise">Delete</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</template>
+
+<!-- Add Cardio Exercise Template -->
+<template id="cardioExerciseTemplate">
+    <div class="card mb-2 cardio-exercise" data-id="new">
+        <div class="card-body">
+            <form class="cardio-exercise-form row g-3">
+                <div class="col-md-4">
+                    <label class="form-label">Cardio Type</label>
+                    <select class="form-select cardio-type-select" required>
+                        <option value="">Select type...</option>
+                        {% for type in cardio_types %}
+                            <option value="{{ type.id }}">{{ type.name }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-md-2">
+                    <label class="form-label">Duration (MM:SS)</label>
+                    <input type="text" class="form-control duration" placeholder="e.g. 23:15">
+                </div>
+                <div class="col-md-2">
+                    <label class="form-label">Distance (miles)</label>
+                    <input type="number" step="0.01" class="form-control distance" placeholder="e.g. 2.5">
+                </div>
+                <div class="col-md-2">
+                    <label class="form-label">Calories</label>
+                    <input type="number" class="form-control calories" placeholder="e.g. 250">
+                </div>
+                <div class="col-md-1">
+                    <label class="form-label">Incline</label>
+                    <input type="number" step="0.1" class="form-control incline" placeholder="e.g. 2.5">
+                </div>
+                <div class="col-md-1">
+                    <label class="form-label">Resistance</label>
+                    <input type="number" step="0.1" class="form-control resistance" placeholder="e.g. 5">
+                </div>
+                <div class="col-md-12 text-end">
+                    <button type="button" class="btn btn-danger btn-sm delete-cardio-exercise">Delete</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</template>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    $(document).ready(function() {
+        // Add new weight exercise
+        $('#addWeightExerciseBtn').click(function() {
+            const template = document.getElementById('weightExerciseTemplate');
+            const clone = template.content.cloneNode(true);
+            $('#weightExercises').append(clone);
+            
+            // Remove any "no exercises" alert
+            $('#weightExercises .alert').remove();
+        });
+        
+        // Add new cardio exercise
+        $('#addCardioExerciseBtn').click(function() {
+            const template = document.getElementById('cardioExerciseTemplate');
+            const clone = template.content.cloneNode(true);
+            $('#cardioExercises').append(clone);
+            
+            // Remove any "no exercises" alert
+            $('#cardioExercises .alert').remove();
+        });
+        
+        // Delete weight exercise
+        $(document).on('click', '.delete-weight-exercise', function() {
+            const exerciseCard = $(this).closest('.weight-exercise');
+            const exerciseId = exerciseCard.data('id');
+            
+            if (exerciseId !== 'new') {
+                // Confirm deletion
+                if (confirm('Are you sure you want to delete this weight exercise?')) {
+                    $.ajax({
+                        url: `/exercise/weight/${exerciseId}/delete`,
+                        type: 'POST',
+                        success: function(response) {
+                            if (response.success) {
+                                exerciseCard.remove();
+                                
+                                // If no more exercises, show alert
+                                if ($('#weightExercises .weight-exercise').length === 0) {
+                                    $('#weightExercises').html('<div class="alert alert-info">No weight exercises recorded. Add one using the button above.</div>');
+                                }
+                            }
+                        }
+                    });
+                }
+            } else {
+                // Just remove the new exercise from DOM
+                exerciseCard.remove();
+                
+                // If no more exercises, show alert
+                if ($('#weightExercises .weight-exercise').length === 0) {
+                    $('#weightExercises').html('<div class="alert alert-info">No weight exercises recorded. Add one using the button above.</div>');
+                }
+            }
+        });
+        
+        // Delete cardio exercise
+        $(document).on('click', '.delete-cardio-exercise', function() {
+            const exerciseCard = $(this).closest('.cardio-exercise');
+            const exerciseId = exerciseCard.data('id');
+            
+            if (exerciseId !== 'new') {
+                // Confirm deletion
+                if (confirm('Are you sure you want to delete this cardio exercise?')) {
+                    $.ajax({
+                        url: `/exercise/cardio/${exerciseId}/delete`,
+                        type: 'POST',
+                        success: function(response) {
+                            if (response.success) {
+                                exerciseCard.remove();
+                                
+                                // If no more exercises, show alert
+                                if ($('#cardioExercises .cardio-exercise').length === 0) {
+                                    $('#cardioExercises').html('<div class="alert alert-info">No cardio exercises recorded. Add one using the button above.</div>');
+                                }
+                            }
+                        }
+                    });
+                }
+            } else {
+                // Just remove the new exercise from DOM
+                exerciseCard.remove();
+                
+                // If no more exercises, show alert
+                if ($('#cardioExercises .cardio-exercise').length === 0) {
+                    $('#cardioExercises').html('<div class="alert alert-info">No cardio exercises recorded. Add one using the button above.</div>');
+                }
+            }
+        });
+        
+        // Save all changes
+        $('#saveChangesBtn').click(function() {
+            // Update workout times
+            const startTime = $('#startTime').val();
+            const endTime = $('#endTime').val();
+            
+            // TODO: Add AJAX to update workout times
+            
+            // Update weight exercises
+            $('.weight-exercise').each(function() {
+                const exerciseCard = $(this);
+                const exerciseId = exerciseCard.data('id');
+                const form = exerciseCard.find('.weight-exercise-form');
+                
+                const machineId = form.find('.machine-select').val();
+                const setsRepsWeight = form.find('.sets-reps-weight').val();
+                const seatHeight = form.find('.seat-height').val();
+                const otherParams = form.find('.other-params').val();
+                const confidence = form.find('.confidence').val();
+                
+                if (exerciseId !== 'new') {
+                    // Update existing exercise
+                    $.ajax({
+                        url: `/exercise/weight/${exerciseId}/update`,
+                        type: 'POST',
+                        data: {
+                            machine_id: machineId,
+                            sets_reps_weight: setsRepsWeight,
+                            seat_height: seatHeight,
+                            other_parameters: otherParams,
+                            confidence: confidence
+                        }
+                    });
+                } else if (machineId && setsRepsWeight) {
+                    // Add new exercise
+                    $.ajax({
+                        url: `/workout/{{ workout.id }}/add_weight_exercise`,
+                        type: 'POST',
+                        data: {
+                            machine_id: machineId,
+                            sets_reps_weight: setsRepsWeight,
+                            seat_height: seatHeight,
+                            other_parameters: otherParams,
+                            confidence: confidence
+                        },
+                        success: function(response) {
+                            if (response.success) {
+                                // Update the card with the new ID
+                                exerciseCard.data('id', response.id);
+                            }
+                        }
+                    });
+                }
+            });
+            
+            // Update cardio exercises
+            $('.cardio-exercise').each(function() {
+                const exerciseCard = $(this);
+                const exerciseId = exerciseCard.data('id');
+                const form = exerciseCard.find('.cardio-exercise-form');
+                
+                const cardioTypeId = form.find('.cardio-type-select').val();
+                const duration = form.find('.duration').val();
+                const distance = form.find('.distance').val();
+                const calories = form.find('.calories').val();
+                const incline = form.find('.incline').val();
+                const resistance = form.find('.resistance').val();
+                
+                if (exerciseId !== 'new') {
+                    // Update existing exercise
+                    $.ajax({
+                        url: `/exercise/cardio/${exerciseId}/update`,
+                        type: 'POST',
+                        data: {
+                            cardio_type_id: cardioTypeId,
+                            duration: duration,
+                            distance: distance,
+                            calories: calories,
+                            incline: incline,
+                            resistance: resistance
+                        }
+                    });
+                } else if (cardioTypeId) {
+                    // Add new exercise
+                    $.ajax({
+                        url: `/workout/{{ workout.id }}/add_cardio_exercise`,
+                        type: 'POST',
+                        data: {
+                            cardio_type_id: cardioTypeId,
+                            duration: duration,
+                            distance: distance,
+                            calories: calories,
+                            incline: incline,
+                            resistance: resistance
+                        },
+                        success: function(response) {
+                            if (response.success) {
+                                // Update the card with the new ID
+                                exerciseCard.data('id', response.id);
+                            }
+                        }
+                    });
+                }
+            });
+            
+            // Redirect back to view page after a short delay
+            setTimeout(function() {
+                window.location.href = "{{ url_for('main.view_workout', workout_id=workout.id) }}";
+            }, 1000);
+        });
+    });
+</script>
+{% endblock %}
