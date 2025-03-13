@@ -10,6 +10,7 @@ matplotlib.use('Agg')  # Use non-interactive backend
 import io
 import base64
 from sqlalchemy import func
+import pytz
 
 main_bp = Blueprint('main', __name__)
 
@@ -60,17 +61,41 @@ def new_workout(user_id):
 
 @main_bp.route('/workout/<int:workout_id>/start', methods=['POST'])
 def start_workout(workout_id):
+    # Get the local timezone (America/Chicago for Central Time)
+    local_tz = pytz.timezone('America/Chicago')
+    
+    # Get current time in UTC and convert to local time
+    utc_now = datetime.utcnow()
+    local_now = utc_now.replace(tzinfo=pytz.utc).astimezone(local_tz)
+    
+    # Remove timezone info for database storage
+    local_now = local_now.replace(tzinfo=None)
+    
     workout = Workout.query.get_or_404(workout_id)
-    workout.start_time = datetime.utcnow()
+    workout.start_time = local_now
     db.session.commit()
-    return jsonify({'success': True, 'time': workout.start_time.strftime('%H:%M:%S')})
+    
+    # Format time in local timezone for display
+    return jsonify({'success': True, 'time': local_now.strftime('%H:%M:%S')})
 
 @main_bp.route('/workout/<int:workout_id>/stop', methods=['POST'])
 def stop_workout(workout_id):
+    # Get the local timezone (America/Chicago for Central Time)
+    local_tz = pytz.timezone('America/Chicago')
+    
+    # Get current time in UTC and convert to local time
+    utc_now = datetime.utcnow()
+    local_now = utc_now.replace(tzinfo=pytz.utc).astimezone(local_tz)
+    
+    # Remove timezone info for database storage
+    local_now = local_now.replace(tzinfo=None)
+    
     workout = Workout.query.get_or_404(workout_id)
-    workout.end_time = datetime.utcnow()
+    workout.end_time = local_now
     db.session.commit()
-    return jsonify({'success': True, 'time': workout.end_time.strftime('%H:%M:%S')})
+    
+    # Format time in local timezone for display
+    return jsonify({'success': True, 'time': local_now.strftime('%H:%M:%S')})
 
 @main_bp.route('/add_weight_machine', methods=['POST'])
 def add_weight_machine():
