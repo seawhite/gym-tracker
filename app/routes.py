@@ -393,12 +393,16 @@ def generate_weight_graph(user_id, machine_id, start_date, end_date):
         # Use end_time if available, otherwise fallback to date with 00:00 time
         timestamp = ex.workout.end_time if ex.workout.end_time else datetime.combine(ex.workout.date, datetime.min.time())
         
+        # Ensure weight and total_reps are numeric values
+        avg_weight = float(ex.average_weight) if ex.average_weight is not None else 0
+        total_reps = float(ex.total_reps) if ex.total_reps is not None else 0
+        
         data.append({
             'date': timestamp.strftime('%Y-%m-%d %H:%M'),
             'timestamp': timestamp,
-            'weight': ex.average_weight,
+            'weight': avg_weight,  # Use the explicitly converted numeric value
             'sets_info': '<br>'.join(sets_info),
-            'total_reps': ex.total_reps
+            'total_reps': total_reps  # Use the explicitly converted numeric value
         })
     
     # Create interactive plot with Plotly
@@ -412,8 +416,34 @@ def generate_weight_graph(user_id, machine_id, start_date, end_date):
                           xref="paper", yref="paper",
                           x=0.5, y=0.5, showarrow=False)
     else:
-        # Create the line plot using the timestamp for the x-axis
-        fig = px.line(df, x='timestamp', y='weight', markers=True, title=f'Average Weight Over Time - {machine_name}')
+        # Create a completely new approach for plotting
+        # Convert data to simple lists of numbers for x and y
+        x_values = list(range(len(df)))
+        y_values = [float(val) for val in df['weight'].values]
+        
+        # Debug: print the actual values being used for the graph
+        print("DEBUG: Data values for weight graph:")
+        for i, (x, y, ts) in enumerate(zip(x_values, y_values, df['timestamp'])):
+            print(f"DEBUG: {i}: x={x}, y={y} lbs, ts={ts}")
+        
+        # Create the plot with numeric indices for x-axis
+        fig = go.Figure()
+        fig.add_trace(go.Scatter(
+            x=x_values,
+            y=y_values,
+            mode='lines+markers',
+            name='Average Weight'
+        ))
+        
+        # Add custom x-axis labels with the timestamps
+        fig.update_layout(
+            xaxis=dict(
+                tickmode='array',
+                tickvals=x_values,
+                ticktext=[ts.strftime('%Y-%m-%d %H:%M') for ts in df['timestamp']]
+            )
+        )
+        fig.update_layout(title=f'Average Weight Over Time - {machine_name}')
         
         # Format the x-axis to show date and time
         fig.update_xaxes(tickformat='%Y-%m-%d %H:%M')
@@ -443,6 +473,13 @@ def generate_weight_graph(user_id, machine_id, start_date, end_date):
         paper_bgcolor='rgba(0,0,0,0)',
         font=dict(family='Arial, sans-serif')
     )
+    
+    # Set Y-axis to start at 0 and have appropriate range based on data
+    if not df.empty:
+        max_weight = df['weight'].max()
+        # Add 10% padding to the top of the range
+        y_max = max_weight * 1.1
+        fig.update_yaxes(range=[0, y_max], dtick=max(5, int(max_weight/5)))
     
     # Convert to JSON for the template
     graph_json = json.dumps(fig, cls=plotly.utils.PlotlyJSONEncoder)
@@ -503,12 +540,19 @@ def generate_reps_graph(user_id, machine_id, start_date, end_date):
         # Use end_time if available, otherwise fallback to date with 00:00 time
         timestamp = ex.workout.end_time if ex.workout.end_time else datetime.combine(ex.workout.date, datetime.min.time())
         
+        # Debug: print the total_reps value
+        print(f"DEBUG: Exercise {ex.id} has {ex.total_reps} total reps, sets_reps_weight: {ex.sets_reps_weight}")
+        
+        # Ensure total_reps is a numeric value
+        total_reps = float(ex.total_reps) if ex.total_reps is not None else 0
+        avg_weight = float(ex.average_weight) if ex.average_weight is not None else 0
+        
         data.append({
             'date': timestamp.strftime('%Y-%m-%d %H:%M'),
             'timestamp': timestamp,
-            'total_reps': ex.total_reps,
+            'total_reps': total_reps,  # Use the explicitly converted numeric value
             'sets_info': '<br>'.join(sets_info),
-            'weight': ex.average_weight
+            'weight': avg_weight  # Use the explicitly converted numeric value
         })
     
     # Create interactive plot with Plotly
@@ -522,8 +566,34 @@ def generate_reps_graph(user_id, machine_id, start_date, end_date):
                           xref="paper", yref="paper",
                           x=0.5, y=0.5, showarrow=False)
     else:
-        # Create the line plot using the timestamp for the x-axis
-        fig = px.line(df, x='timestamp', y='total_reps', markers=True, title=f'Total Repetitions Over Time - {machine_name}')
+        # Create a completely new approach for plotting
+        # Convert data to simple lists of numbers for x and y
+        x_values = list(range(len(df)))
+        y_values = [float(val) for val in df['total_reps'].values]
+        
+        # Debug: print the actual values being used for the graph
+        print("DEBUG: Data values for reps graph:")
+        for i, (x, y, ts) in enumerate(zip(x_values, y_values, df['timestamp'])):
+            print(f"DEBUG: {i}: x={x}, y={y} reps, ts={ts}")
+        
+        # Create the plot with numeric indices for x-axis
+        fig = go.Figure()
+        fig.add_trace(go.Scatter(
+            x=x_values,
+            y=y_values,
+            mode='lines+markers',
+            name='Total Reps'
+        ))
+        
+        # Add custom x-axis labels with the timestamps
+        fig.update_layout(
+            xaxis=dict(
+                tickmode='array',
+                tickvals=x_values,
+                ticktext=[ts.strftime('%Y-%m-%d %H:%M') for ts in df['timestamp']]
+            )
+        )
+        fig.update_layout(title=f'Total Repetitions Over Time - {machine_name}')
         
         # Format the x-axis to show date and time
         fig.update_xaxes(tickformat='%Y-%m-%d %H:%M')
@@ -553,6 +623,13 @@ def generate_reps_graph(user_id, machine_id, start_date, end_date):
         paper_bgcolor='rgba(0,0,0,0)',
         font=dict(family='Arial, sans-serif')
     )
+    
+    # Set Y-axis to start at 0 and have appropriate range based on data
+    if not df.empty:
+        max_reps = df['total_reps'].max()
+        # Add 10% padding to the top of the range
+        y_max = max_reps * 1.1
+        fig.update_yaxes(range=[0, y_max], dtick=max(1, int(max_reps/5)))
     
     # Convert to JSON for the template
     graph_json = json.dumps(fig, cls=plotly.utils.PlotlyJSONEncoder)
@@ -585,10 +662,13 @@ def generate_cardio_duration_graph(user_id, cardio_type_id, start_date, end_date
             # Use end_time if available, otherwise fallback to date with 00:00 time
             timestamp = ex.workout.end_time if ex.workout.end_time else datetime.combine(ex.workout.date, datetime.min.time())
             
+            # Ensure duration is a numeric value
+            duration_minutes = float(ex.duration_minutes) if ex.duration_minutes is not None else 0
+            
             data.append({
                 'date': timestamp.strftime('%Y-%m-%d %H:%M'),
                 'timestamp': timestamp,
-                'duration': ex.duration_minutes,
+                'duration': duration_minutes,  # Use the explicitly converted numeric value
                 'duration_display': duration_display,
                 'distance_display': distance_display,
                 'calories_display': calories_display
@@ -605,8 +685,34 @@ def generate_cardio_duration_graph(user_id, cardio_type_id, start_date, end_date
                           xref="paper", yref="paper",
                           x=0.5, y=0.5, showarrow=False)
     else:
-        # Create the line plot using the timestamp for the x-axis
-        fig = px.line(df, x='timestamp', y='duration', markers=True, title=f'Cardio Duration Over Time - {cardio_name}')
+        # Create a completely new approach for plotting
+        # Convert data to simple lists of numbers for x and y
+        x_values = list(range(len(df)))
+        y_values = [float(val) for val in df['duration'].values]
+        
+        # Debug: print the actual values being used for the graph
+        print("DEBUG: Data values for cardio duration graph:")
+        for i, (x, y, ts) in enumerate(zip(x_values, y_values, df['timestamp'])):
+            print(f"DEBUG: {i}: x={x}, y={y} minutes, ts={ts}")
+        
+        # Create the plot with numeric indices for x-axis
+        fig = go.Figure()
+        fig.add_trace(go.Scatter(
+            x=x_values,
+            y=y_values,
+            mode='lines+markers',
+            name='Duration'
+        ))
+        
+        # Add custom x-axis labels with the timestamps
+        fig.update_layout(
+            xaxis=dict(
+                tickmode='array',
+                tickvals=x_values,
+                ticktext=[ts.strftime('%Y-%m-%d %H:%M') for ts in df['timestamp']]
+            )
+        )
+        fig.update_layout(title=f'Cardio Duration Over Time - {cardio_name}')
         
         # Format the x-axis to show date and time
         fig.update_xaxes(tickformat='%Y-%m-%d %H:%M')
@@ -636,6 +742,13 @@ def generate_cardio_duration_graph(user_id, cardio_type_id, start_date, end_date
         paper_bgcolor='rgba(0,0,0,0)',
         font=dict(family='Arial, sans-serif')
     )
+    
+    # Set Y-axis to start at 0 and have appropriate range based on data
+    if not df.empty:
+        max_duration = df['duration_minutes'].max()
+        # Add 10% padding to the top of the range
+        y_max = max_duration * 1.1
+        fig.update_yaxes(range=[0, y_max], dtick=max(5, int(max_duration/5)))
     
     # Convert to JSON for the template
     graph_json = json.dumps(fig, cls=plotly.utils.PlotlyJSONEncoder)
@@ -676,10 +789,13 @@ def generate_cardio_distance_graph(user_id, cardio_type_id, start_date, end_date
             # Use end_time if available, otherwise fallback to date with 00:00 time
             timestamp = ex.workout.end_time if ex.workout.end_time else datetime.combine(ex.workout.date, datetime.min.time())
             
+            # Ensure distance is a numeric value
+            distance = float(ex.distance) if ex.distance is not None else 0
+            
             data.append({
                 'date': timestamp.strftime('%Y-%m-%d %H:%M'),
                 'timestamp': timestamp,
-                'distance': ex.distance,
+                'distance': distance,  # Use the explicitly converted numeric value
                 'duration_display': duration_display,
                 'pace_display': pace_display,
                 'calories_display': calories_display
@@ -696,8 +812,34 @@ def generate_cardio_distance_graph(user_id, cardio_type_id, start_date, end_date
                           xref="paper", yref="paper",
                           x=0.5, y=0.5, showarrow=False)
     else:
-        # Create the line plot using the timestamp for the x-axis
-        fig = px.line(df, x='timestamp', y='distance', markers=True, title=f'Cardio Distance Over Time - {cardio_name}')
+        # Create a completely new approach for plotting
+        # Convert data to simple lists of numbers for x and y
+        x_values = list(range(len(df)))
+        y_values = [float(val) for val in df['distance'].values]
+        
+        # Debug: print the actual values being used for the graph
+        print("DEBUG: Data values for cardio distance graph:")
+        for i, (x, y, ts) in enumerate(zip(x_values, y_values, df['timestamp'])):
+            print(f"DEBUG: {i}: x={x}, y={y} miles, ts={ts}")
+        
+        # Create the plot with numeric indices for x-axis
+        fig = go.Figure()
+        fig.add_trace(go.Scatter(
+            x=x_values,
+            y=y_values,
+            mode='lines+markers',
+            name='Distance'
+        ))
+        
+        # Add custom x-axis labels with the timestamps
+        fig.update_layout(
+            xaxis=dict(
+                tickmode='array',
+                tickvals=x_values,
+                ticktext=[ts.strftime('%Y-%m-%d %H:%M') for ts in df['timestamp']]
+            )
+        )
+        fig.update_layout(title=f'Cardio Distance Over Time - {cardio_name}')
         
         # Format the x-axis to show date and time
         fig.update_xaxes(tickformat='%Y-%m-%d %H:%M')
@@ -728,6 +870,13 @@ def generate_cardio_distance_graph(user_id, cardio_type_id, start_date, end_date
         paper_bgcolor='rgba(0,0,0,0)',
         font=dict(family='Arial, sans-serif')
     )
+    
+    # Set Y-axis to start at 0 and have appropriate range based on data
+    if not df.empty:
+        max_distance = df['distance'].max()
+        # Add 10% padding to the top of the range
+        y_max = max_distance * 1.1
+        fig.update_yaxes(range=[0, y_max], dtick=max(0.5, round(max_distance/5, 1)))
     
     # Convert to JSON for the template
     graph_json = json.dumps(fig, cls=plotly.utils.PlotlyJSONEncoder)
