@@ -324,14 +324,9 @@ def user_stats(user_id):
     
     # Weight lifting stats if machine selected
     if selected_machine_id:
-        print(f"DEBUG - Generating weight graph for user {user_id}, machine {selected_machine_id}")
         weight_graph = generate_weight_graph(user_id, selected_machine_id, start_date, end_date)
-        print(f"DEBUG - Weight graph type: {type(weight_graph)}")
-        print(f"DEBUG - Weight graph content (first 100 chars): {weight_graph[:100] if weight_graph else 'None'}")
         
         reps_graph = generate_reps_graph(user_id, selected_machine_id, start_date, end_date)
-        print(f"DEBUG - Reps graph type: {type(reps_graph)}")
-        print(f"DEBUG - Reps graph content (first 100 chars): {reps_graph[:100] if reps_graph else 'None'}")
     
     # Cardio stats if cardio type selected
     if selected_cardio_id:
@@ -451,7 +446,6 @@ def generate_weight_graph(user_id, machine_id, start_date, end_date):
     
     # Convert to JSON for the template
     graph_json = json.dumps(fig, cls=plotly.utils.PlotlyJSONEncoder)
-    print(f"DEBUG - Generated graph JSON length: {len(graph_json)}")
     return graph_json
 
 def create_empty_graph(title_text):
@@ -472,7 +466,6 @@ def create_empty_graph(title_text):
         }
     }
     json_data = json.dumps(fig, cls=plotly.utils.PlotlyJSONEncoder)
-    print(f"DEBUG - Empty graph JSON: {json_data[:100]}...")
     return json_data
 
 def generate_reps_graph(user_id, machine_id, start_date, end_date):
@@ -563,8 +556,6 @@ def generate_reps_graph(user_id, machine_id, start_date, end_date):
     
     # Convert to JSON for the template
     graph_json = json.dumps(fig, cls=plotly.utils.PlotlyJSONEncoder)
-    print(f"DEBUG - Generated reps graph JSON length: {len(graph_json)}")
-    print(f"DEBUG - First 200 chars of reps graph JSON: {graph_json[:200]}")
     return graph_json
 
 def generate_cardio_duration_graph(user_id, cardio_type_id, start_date, end_date):
@@ -648,8 +639,6 @@ def generate_cardio_duration_graph(user_id, cardio_type_id, start_date, end_date
     
     # Convert to JSON for the template
     graph_json = json.dumps(fig, cls=plotly.utils.PlotlyJSONEncoder)
-    print(f"DEBUG - Generated reps graph JSON length: {len(graph_json)}")
-    print(f"DEBUG - First 200 chars of reps graph JSON: {graph_json[:200]}")
     return graph_json
 
 def generate_cardio_distance_graph(user_id, cardio_type_id, start_date, end_date):
@@ -742,6 +731,4 @@ def generate_cardio_distance_graph(user_id, cardio_type_id, start_date, end_date
     
     # Convert to JSON for the template
     graph_json = json.dumps(fig, cls=plotly.utils.PlotlyJSONEncoder)
-    print(f"DEBUG - Generated reps graph JSON length: {len(graph_json)}")
-    print(f"DEBUG - First 200 chars of reps graph JSON: {graph_json[:200]}")
     return graph_json
