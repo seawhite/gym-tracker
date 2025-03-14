@@ -745,7 +745,7 @@ def generate_cardio_duration_graph(user_id, cardio_type_id, start_date, end_date
     
     # Set Y-axis to start at 0 and have appropriate range based on data
     if not df.empty:
-        max_duration = df['duration_minutes'].max()
+        max_duration = max(y_values)  # Use the y_values list we created earlier
         # Add 10% padding to the top of the range
         y_max = max_duration * 1.1
         fig.update_yaxes(range=[0, y_max], dtick=max(5, int(max_duration/5)))
@@ -873,7 +873,7 @@ def generate_cardio_distance_graph(user_id, cardio_type_id, start_date, end_date
     
     # Set Y-axis to start at 0 and have appropriate range based on data
     if not df.empty:
-        max_distance = df['distance'].max()
+        max_distance = max(y_values)  # Use the y_values list we created earlier
         # Add 10% padding to the top of the range
         y_max = max_distance * 1.1
         fig.update_yaxes(range=[0, y_max], dtick=max(0.5, round(max_distance/5, 1)))
