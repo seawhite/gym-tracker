@@ -395,8 +395,12 @@ def generate_weight_graph(user_id, machine_id, start_date, end_date):
                 except (ValueError, IndexError):
                     pass
         
+        # Use end_time if available, otherwise fallback to date with 00:00 time
+        timestamp = ex.workout.end_time if ex.workout.end_time else datetime.combine(ex.workout.date, datetime.min.time())
+        
         data.append({
-            'date': ex.workout.date.strftime('%Y-%m-%d'),
+            'date': timestamp.strftime('%Y-%m-%d %H:%M'),
+            'timestamp': timestamp,
             'weight': ex.average_weight,
             'sets_info': '<br>'.join(sets_info),
             'total_reps': ex.total_reps
@@ -413,15 +417,18 @@ def generate_weight_graph(user_id, machine_id, start_date, end_date):
                           xref="paper", yref="paper",
                           x=0.5, y=0.5, showarrow=False)
     else:
-        # Create the line plot
-        fig = px.line(df, x='date', y='weight', markers=True, title=f'Average Weight Over Time - {machine_name}')
+        # Create the line plot using the timestamp for the x-axis
+        fig = px.line(df, x='timestamp', y='weight', markers=True, title=f'Average Weight Over Time - {machine_name}')
+        
+        # Format the x-axis to show date and time
+        fig.update_xaxes(tickformat='%Y-%m-%d %H:%M')
     
     # Add hover data if we have data
     if not df.empty:
         hover_data = []
         for i, row in df.iterrows():
             hover_data.append(
-                f"<b>Date:</b> {row['date']}<br>"
+                f"<b>Date & Time:</b> {row['date']}<br>"
                 f"<b>Weight:</b> {row['weight']:.1f} lbs<br>"
                 f"<b>Sets & Reps:</b><br>{row['sets_info']}<br>"
                 f"<b>Total Reps:</b> {row['total_reps']}"
@@ -500,8 +507,12 @@ def generate_reps_graph(user_id, machine_id, start_date, end_date):
                 except (ValueError, IndexError):
                     pass
         
+        # Use end_time if available, otherwise fallback to date with 00:00 time
+        timestamp = ex.workout.end_time if ex.workout.end_time else datetime.combine(ex.workout.date, datetime.min.time())
+        
         data.append({
-            'date': ex.workout.date.strftime('%Y-%m-%d'),
+            'date': timestamp.strftime('%Y-%m-%d %H:%M'),
+            'timestamp': timestamp,
             'total_reps': ex.total_reps,
             'sets_info': '<br>'.join(sets_info),
             'weight': ex.average_weight
@@ -518,15 +529,18 @@ def generate_reps_graph(user_id, machine_id, start_date, end_date):
                           xref="paper", yref="paper",
                           x=0.5, y=0.5, showarrow=False)
     else:
-        # Create the line plot
-        fig = px.line(df, x='date', y='total_reps', markers=True, title=f'Total Repetitions Over Time - {machine_name}')
+        # Create the line plot using the timestamp for the x-axis
+        fig = px.line(df, x='timestamp', y='total_reps', markers=True, title=f'Total Repetitions Over Time - {machine_name}')
+        
+        # Format the x-axis to show date and time
+        fig.update_xaxes(tickformat='%Y-%m-%d %H:%M')
     
     # Add hover data if we have data
     if not df.empty:
         hover_data = []
         for i, row in df.iterrows():
             hover_data.append(
-                f"<b>Date:</b> {row['date']}<br>"
+                f"<b>Date & Time:</b> {row['date']}<br>"
                 f"<b>Total Reps:</b> {row['total_reps']}<br>"
                 f"<b>Sets & Reps:</b><br>{row['sets_info']}<br>"
                 f"<b>Average Weight:</b> {row['weight']:.1f} lbs"
@@ -577,8 +591,12 @@ def generate_cardio_duration_graph(user_id, cardio_type_id, start_date, end_date
             distance_display = f"{ex.distance:.2f} miles" if ex.distance else 'N/A'
             calories_display = f"{ex.calories} cal" if ex.calories else 'N/A'
             
+            # Use end_time if available, otherwise fallback to date with 00:00 time
+            timestamp = ex.workout.end_time if ex.workout.end_time else datetime.combine(ex.workout.date, datetime.min.time())
+            
             data.append({
-                'date': ex.workout.date.strftime('%Y-%m-%d'),
+                'date': timestamp.strftime('%Y-%m-%d %H:%M'),
+                'timestamp': timestamp,
                 'duration': ex.duration_minutes,
                 'duration_display': duration_display,
                 'distance_display': distance_display,
@@ -596,15 +614,18 @@ def generate_cardio_duration_graph(user_id, cardio_type_id, start_date, end_date
                           xref="paper", yref="paper",
                           x=0.5, y=0.5, showarrow=False)
     else:
-        # Create the line plot
-        fig = px.line(df, x='date', y='duration', markers=True, title=f'Cardio Duration Over Time - {cardio_name}')
+        # Create the line plot using the timestamp for the x-axis
+        fig = px.line(df, x='timestamp', y='duration', markers=True, title=f'Cardio Duration Over Time - {cardio_name}')
+        
+        # Format the x-axis to show date and time
+        fig.update_xaxes(tickformat='%Y-%m-%d %H:%M')
     
     # Add hover data if we have data
     if not df.empty:
         hover_data = []
         for i, row in df.iterrows():
             hover_data.append(
-                f"<b>Date:</b> {row['date']}<br>"
+                f"<b>Date & Time:</b> {row['date']}<br>"
                 f"<b>Duration:</b> {row['duration_display']}<br>"
                 f"<b>Distance:</b> {row['distance_display']}<br>"
                 f"<b>Calories:</b> {row['calories_display']}"
@@ -663,8 +684,12 @@ def generate_cardio_distance_graph(user_id, cardio_type_id, start_date, end_date
                 seconds = int((pace - minutes) * 60)
                 pace_display = f"{minutes}:{seconds:02d} min/mile"
             
+            # Use end_time if available, otherwise fallback to date with 00:00 time
+            timestamp = ex.workout.end_time if ex.workout.end_time else datetime.combine(ex.workout.date, datetime.min.time())
+            
             data.append({
-                'date': ex.workout.date.strftime('%Y-%m-%d'),
+                'date': timestamp.strftime('%Y-%m-%d %H:%M'),
+                'timestamp': timestamp,
                 'distance': ex.distance,
                 'duration_display': duration_display,
                 'pace_display': pace_display,
@@ -682,15 +707,18 @@ def generate_cardio_distance_graph(user_id, cardio_type_id, start_date, end_date
                           xref="paper", yref="paper",
                           x=0.5, y=0.5, showarrow=False)
     else:
-        # Create the line plot
-        fig = px.line(df, x='date', y='distance', markers=True, title=f'Cardio Distance Over Time - {cardio_name}')
+        # Create the line plot using the timestamp for the x-axis
+        fig = px.line(df, x='timestamp', y='distance', markers=True, title=f'Cardio Distance Over Time - {cardio_name}')
+        
+        # Format the x-axis to show date and time
+        fig.update_xaxes(tickformat='%Y-%m-%d %H:%M')
     
     # Add hover data if we have data
     if not df.empty:
         hover_data = []
         for i, row in df.iterrows():
             hover_data.append(
-                f"<b>Date:</b> {row['date']}<br>"
+                f"<b>Date & Time:</b> {row['date']}<br>"
                 f"<b>Distance:</b> {row['distance']:.2f} miles<br>"
                 f"<b>Duration:</b> {row['duration_display']}<br>"
                 f"<b>Pace:</b> {row['pace_display']}<br>"
